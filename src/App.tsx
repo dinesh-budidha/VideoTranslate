@@ -6,6 +6,8 @@ import ProcessingStatus from './components/ProcessingStatus';
 import VideoPlayer from './components/VideoPlayer';
 
 function App() {
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [translatedVideo, setTranslatedVideo] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [file, setFile] = useState<File | null>(null);
   const [sourceLanguage, setSourceLanguage] = useState<string>('en');
@@ -18,6 +20,27 @@ function App() {
     setFile(uploadedFile);
     setCurrentStep(2);
   };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files.length > 0) {
+            setVideoFile(event.target.files[0]);
+        }
+    };
+  const handleUpload = async () => {
+        if (!videoFile) return;
+
+        const formData = new FormData();
+        formData.append("video", videoFile);
+
+        const response = await fetch("http://localhost:5000/upload", {
+            method: "POST",
+            body: formData,
+        });
+
+        const data = await response.json();
+        setTranslatedVideo(data.video_url);
+    };
+
 
   const handleLanguageSelection = () => {
     setCurrentStep(3);
@@ -43,6 +66,20 @@ function App() {
   };
 
   return (
+    <div className="p-5">
+            <h1 className="text-xl font-bold">Upload Video for Translation</h1>
+            <input type="file" accept="video/*" onChange={handleFileChange} />
+            <button onClick={handleUpload} className="bg-blue-500 text-white px-4 py-2 rounded">
+                Upload & Translate
+            </button>
+
+            {translatedVideo && (
+                <video controls className="mt-4">
+                    <source src={translatedVideo} type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+            )}
+        </div>
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white shadow-md">
